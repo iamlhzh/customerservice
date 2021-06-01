@@ -24,7 +24,7 @@ public class WeixinAppletsBatchService {
 
     private String appid ="wxc66d689cce7ffcc8";
 
-    private String appsecret = "1dc45514a1dc47be958ff2ba33038622";
+    private String appsecret = "4d47a344c6e9aabf7f4ba269c85f4d34";
 
     private Logger logger = LoggerFactory.getLogger(WeixinAppletsBatchService.class);
 
