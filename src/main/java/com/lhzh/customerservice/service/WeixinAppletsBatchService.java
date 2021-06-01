@@ -12,6 +12,7 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -22,9 +23,11 @@ import java.util.List;
 @Service
 public class WeixinAppletsBatchService {
 
-    private String appid ="wxc66d689cce7ffcc8";
+    @Value("${wxapp.myroad.appid}")
+    private String appid;
 
-    private String appsecret = "4d47a344c6e9aabf7f4ba269c85f4d34";
+    @Value("${wxapp.myroad.secret}")
+    private String appsecret;
 
     private Logger logger = LoggerFactory.getLogger(WeixinAppletsBatchService.class);
 
