@@ -10,12 +10,10 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.ConnectException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.security.MessageDigest;
 import java.util.Arrays;
 
@@ -25,7 +23,7 @@ public class WxUtils {
     private static final char[] HEX_DIGITS = {'0', '1', '2', '3', '4', '5',
             '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
-    private Logger logger = LoggerFactory.getLogger(WxUtils.class);
+    private static Logger logger = LoggerFactory.getLogger(WxUtils.class);
 
     public final static String access_token_url = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid={corpId}&secret={corpsecret}";
 
@@ -162,6 +160,138 @@ public class WxUtils {
             }
         }
         return accessToken;
+    }
+
+    /**
+     * 新增临时素材
+     *
+     * @param fileType
+     * @param filePath
+     * @return
+     * @throws Exception
+     */
+    public static JSONObject UploadMeida(String fileType, String filePath) throws Exception {
+        // 返回结果
+        String result = null;
+        File file = new File(filePath);
+        if (!file.exists() || !file.isFile()) {
+            logger.info("文件不存在");
+            throw new IOException("文件不存在");
+        }
+        String token = getWxAccesstoken("wxc66d689cce7ffcc8","4d47a344c6e9aabf7f4ba269c85f4d34");
+        if (token == null) {
+            logger.info("未获取到token");
+            throw new IOException("未获取到token");
+        }
+        String urlString = " https://api.weixin.qq.com/cgi-bin/media/upload?access_token=ACCESS_TOKEN&type=TYPE".replace("ACCESS_TOKEN", token).replace("TYPE", fileType);
+        URL url = new URL(urlString);
+        HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");// 以POST方式提交表单
+        conn.setDoInput(true);
+        conn.setDoOutput(true);
+        conn.setUseCaches(false);// POST方式不能使用缓存
+        // 设置请求头信息
+        conn.setRequestProperty("Connection", "Keep-Alive");
+        conn.setRequestProperty("Charset", "UTF-8");
+        // 设置边界
+        String BOUNDARY = "----------" + System.currentTimeMillis();
+        conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + BOUNDARY);
+        // 请求正文信息
+        // 第一部分
+        StringBuilder sb = new StringBuilder();
+        sb.append("--");// 必须多两条道
+        sb.append(BOUNDARY);
+        sb.append("\r\n");
+        sb.append("Content-Disposition: form-data;name=\"media\"; filename=\"" + file.getName() + "\"\r\n");
+        sb.append("Content-Type:application/octet-stream\r\n\r\n");
+        logger.debug("sb:" + sb);
+
+        // 获得输出流
+        OutputStream out = new DataOutputStream(conn.getOutputStream());
+        // 输出表头
+        out.write(sb.toString().getBytes("UTF-8"));
+        // 文件正文部分
+        // 把文件以流的方式 推送道URL中
+        DataInputStream din = new DataInputStream(new FileInputStream(file));
+        int bytes = 0;
+        byte[] buffer = new byte[1024];
+        while ((bytes = din.read(buffer)) != -1) {
+            out.write(buffer, 0, bytes);
+        }
+        din.close();
+        // 结尾部分
+        byte[] foot = ("\r\n--" + BOUNDARY + "--\r\n").getBytes("UTF-8");// 定义数据最后分割线
+        out.write(foot);
+        out.flush();
+        out.close();
+        if (HttpsURLConnection.HTTP_OK == conn.getResponseCode()) {
+
+            StringBuffer strbuffer = null;
+            BufferedReader reader = null;
+            try {
+                strbuffer = new StringBuffer();
+                reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                String lineString = null;
+                while ((lineString = reader.readLine()) != null) {
+                    strbuffer.append(lineString);
+
+                }
+                if (result == null) {
+                    result = strbuffer.toString();
+                    logger.info("result:" + result);
+                }
+            } catch (IOException e) {
+                logger.error("发送POST请求出现异常！", e);
+                e.printStackTrace();
+            } finally {
+                if (reader != null) {
+                    reader.close();
+                }
+            }
+
+        }
+        JSONObject jsonObject = JSONObject.parseObject(result);
+        return jsonObject;
+
+    }
+
+    public static String download(String urlString,int i)throws Exception {
+        // 构造URL
+        URL url =new URL(urlString);
+        // 打开连接
+        URLConnection con = url.openConnection();
+        // 输入流
+        InputStream is = con.getInputStream();
+        // 1K的数据缓冲
+        byte[] bs =new byte[1024];
+        // 读取到的数据长度
+        int len;
+        // 输出的文件流
+//        String filename ="D:\\" + i +".jpg"; //下载路径及下载图片名称
+//        File file =new File(filename);
+        String property = System.getProperty("user.dir");
+        //在根目录生成一个文件
+        File file = new File(property+"/"+i+".jpg");
+        logger.info(property+i);
+
+        FileOutputStream os =new FileOutputStream(file,true);
+        // 开始读取
+        while ((len = is.read(bs)) != -1) {
+            os.write(bs,0, len);
+        }
+        System.out.println(i);
+        // 完毕，关闭所有链接
+        os.close();
+        is.close();
+        return file.getAbsolutePath();
+    }
+
+    public static void main(String[] args) throws Exception {
+
+        String download = download("http://dev-sz.valueonline.cn/idm//formal/de66866d-db2b-47f5-8bee-3de6b4c54457.jpg", 2);
+        System.out.println(download);
+//        JSONObject jsonObject = UploadMeida("image", download);
+//        System.out.println(jsonObject);
     }
 
 }
