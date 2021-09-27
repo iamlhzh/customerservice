@@ -271,7 +271,7 @@ public class WxUtils {
 //        File file =new File(filename);
         String property = System.getProperty("user.dir");
         //在根目录生成一个文件
-        File file = new File(property+"/"+i+".jpg");
+        File file = new File(property+"/"+"aa.jpg");
         logger.info(property+i);
 
         FileOutputStream os =new FileOutputStream(file,true);
@@ -290,8 +290,8 @@ public class WxUtils {
 
         String download = download("http://dev-sz.valueonline.cn/idm//formal/de66866d-db2b-47f5-8bee-3de6b4c54457.jpg", 2);
         System.out.println(download);
-//        JSONObject jsonObject = UploadMeida("image", download);
-//        System.out.println(jsonObject);
+        JSONObject jsonObject = UploadMeida("image", download);
+        System.out.println(jsonObject);
     }
 
 }
